@@ -805,13 +805,33 @@ class AppScaleTools(object):
       RemoteHelper.rsync_files(head_node.public_ip, options.keyname,
                                options.rsync_source)
 
+    if not options.start_services:
+      headers = ("Public IP", "Private IP")
+      ips = [(node.public_ip, node.private_ip) for node in node_layout.nodes]
+      ips_table = tabulate(tabular_data=ips, headers=headers, tablefmt='simple')
+      AppScaleLogger.success(
+        "\n---------------------------------\n"
+        "Deployment VMs have been started:\n"
+        "{table}\n\n"
+        "Now you can login to the head node:\n"
+        "  ssh -i ~/.appscale/{keyname}.key root@{head_ip}\n"
+        "From the head you can login to other nodes using:\n"
+        "  ssh <private_ip>.\n"
+        "\n"
+        "Run `appscale up` to start AppScale on provisioned machines "
+        "when you finished all preparations on the machines."
+        .format(table=ips_table, keyname=options.keyname,
+                head_ip=head_node.public_ip)
+      )
+      LocalState.update_local_metadata(options, nodes_layout=node_layout)
+      return
+
     # Start services on head node.
     RemoteHelper.start_head_node(options, my_id, node_layout)
 
     # Write deployment metadata to disk (facilitates SSH operations, etc.)
-    db_master = node_layout.db_master().private_ip
     head_node = node_layout.head_node().public_ip
-    LocalState.update_local_metadata(options, db_master, head_node)
+    LocalState.update_local_metadata(options, head_node)
 
     # Copy the locations.json to the head node
     RemoteHelper.copy_local_metadata(node_layout.head_node().public_ip,

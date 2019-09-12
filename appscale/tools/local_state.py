@@ -386,27 +386,44 @@ class LocalState(object):
       os.remove(keyname_file)
 
   @classmethod
-  def update_local_metadata(cls, options, db_master, head_node):
+  def update_local_metadata(cls, options, head_node=None, nodes_layout=None):
     """Writes a locations.json file to the local filesystem,
     that the tools can use to locate machines in an AppScale deployment.
 
     Args:
       options: A Namespace that indicates deployment-specific parameters not
         relating to the placement strategy in use.
-      db_master: A str representing the location of the database master.
       head_node: A str representing the location we can reach an
         AppController at.
+      nodes_layout: An instance of NodeLayout.
     """
-    # find out every machine's IP address and what they're doing
-    acc = AppControllerClient(head_node, cls.get_secret_key(options.keyname))
-    role_info = acc.get_role_info()
+    if head_node:
+      # find out every machine's IP address and what they're doing
+      acc = AppControllerClient(head_node, cls.get_secret_key(options.keyname))
+      role_info = acc.get_role_info()
+    elif nodes_layout:
+      role_info = [
+        {
+          "cloud": node.cloud,
+          "disk": node.disk,
+          "instance_id": node.instance_id,
+          "jobs": node.roles,
+          "private_ip": node.private_ip,
+          "public_ip": node.public_ip,
+          "ssh_key": "/etc/appscale/keys/{}/{}.key"
+                     .format(node.cloud, options.keyname)
+        }
+        for node in nodes_layout
+      ]
+    else:
+      raise AppScaleException("---")
 
     infrastructure = options.infrastructure or 'xen'
 
     # write our yaml metadata file
     appscalefile_contents = {
-      'infrastructure' : infrastructure,
-      'group' : options.group,
+      'infrastructure': infrastructure,
+      'group': options.group,
     }
 
     if infrastructure != 'xen':

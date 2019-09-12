@@ -190,6 +190,10 @@ class ParseArgs(object):
     #TODO: remove arguments in appscale-run-instances that are no longer
     # supported. (min, max, appengine, max_memory, scp)
     if function == "appscale-run-instances":
+      self.parser.add_argument('--start-services', action='store_true',
+        default=False,
+        help="Starts VMs in cloud according to ips_layout. In contrast to "
+             "`appscale up` it doesn't start AppScale on the machines.")
       self.parser.add_argument('--update',
         nargs='+',
         choices=self.ALLOWED_DIR_UPDATES,

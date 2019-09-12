@@ -54,7 +54,16 @@ def main():
       update_dir = sys.argv[3:]
 
     try:
-      appscale.up(update=update_dir)
+      appscale.up(start_services=True, update=update_dir)
+    except Exception as exception:
+      LocalState.generate_crash_log(exception, traceback.format_exc())
+      sys.exit(1)
+  elif command == "start-machines":
+    if len(sys.argv) > 2:
+      cprint("Usage: appscale start-machines", 'red')
+      sys.exit(1)
+    try:
+      appscale.up(start_services=False)
     except Exception as exception:
       LocalState.generate_crash_log(exception, traceback.format_exc())
       sys.exit(1)

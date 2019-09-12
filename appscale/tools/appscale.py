@@ -94,6 +94,9 @@ Available commands:
                                     AppScale deployment or a valid role.
                                     Default is headnode. Machines
                                     must have public ips to use this command.
+  start-machines                    Starts VMs in cloud according to ips_layout.
+                                    In contrast to `appscale up` it doesn't
+                                    start AppScale services on the machines.
   stats                             Prints statistics of nodes and proxies.
     [--types
     [nodes] [processes] [proxies]]  Determines which stats should be printed.
@@ -239,12 +242,13 @@ Available commands:
     shutil.copy(self.TEMPLATE_APPSCALEFILE, appscalefile_location)
 
 
-  def up(self, update=[]):
+  def up(self, start_services=True, update=[]):
     """ Starts an AppScale deployment with the configuration options from the
     AppScalefile in the current directory.
 
     Args:
-        update: A list of appscale code directories to update and build.
+      start_services: a bool indicating if appscale services should be started.
+      update: A list of appscale code directories to update and build.
     Raises:
       AppScalefileException: If there is no AppScalefile in the current
       directory.
@@ -259,6 +263,9 @@ Available commands:
 
     # Construct a run-instances command from the file's contents
     command = []
+    if start_services:
+      command.append("--start-services")
+
     if update:
         command.append("--update")
         command.extend(update)

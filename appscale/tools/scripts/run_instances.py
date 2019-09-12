@@ -17,6 +17,7 @@ def main():
   """ Execute appscale-run-instances command. """
   options = ParseArgs(sys.argv[1:], "appscale-run-instances").args
   try:
+    options.start_services = True
     AppScaleTools.run_instances(options)
     sys.exit(0)
   except Exception, e:
